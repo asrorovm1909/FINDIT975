@@ -1,0 +1,252 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f7f8fc">
+    <title>FindIt — Найди потерянное</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+
+<header class="header">
+    <a href="#" class="logo">Find<span>It.</span></a>
+
+    <nav>
+        <a href="#home">Главная</a>
+        <a href="#catalog">Объявления</a>
+        <a href="#about">О проекте</a>
+    </nav>
+
+    <button class="button primary" id="openAdd">
+        + Добавить объявление
+    </button>
+</header>
+
+<main>
+    <section class="hero" id="home">
+        <div class="hero-content">
+            <span class="eyebrow">СООБЩЕСТВО FINDIT</span>
+
+            <h1>
+                Потерял вещь?<br>
+                <span>Давай найдём.</span>
+            </h1>
+
+            <p>
+                Публикуй объявления о потерянных и найденных вещах.
+                Помогай людям возвращать то, что им дорого.
+            </p>
+
+            <div class="hero-buttons">
+                <a href="#catalog" class="button primary">Найти вещь →</a>
+                <button class="button secondary" id="heroFound">
+                    Я что-то нашёл
+                </button>
+            </div>
+
+            <div class="stats">
+                <div>
+                    <strong id="totalCount">0</strong>
+                    <span>Объявлений</span>
+                </div>
+                <div>
+                    <strong id="lostCount">0</strong>
+                    <span>Потеряно</span>
+                </div>
+                <div>
+                    <strong id="foundCount">0</strong>
+                    <span>Найдено</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="hero-art">
+            <div class="art-circle"></div>
+            <div class="art-icon">🔎</div>
+            <div class="floating-card card-one">
+                <span>✓</span>
+                <div>
+                    <b>Вместе найдём</b>
+                    <small>FindIt Community</small>
+                </div>
+            </div>
+            <div class="floating-card card-two">
+                <span>📍</span>
+                <div>
+                    <b>Поиск рядом</b>
+                    <small>Твой город</small>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="catalog" id="catalog">
+        <div class="section-heading">
+            <div>
+                <span class="eyebrow">КАТАЛОГ</span>
+                <h2>Объявления</h2>
+                <p>Ищи нужную вещь или помогай другим.</p>
+            </div>
+
+            <button class="button primary" id="catalogAdd">
+                + Разместить
+            </button>
+        </div>
+
+        <div class="filters">
+            <div class="search">
+                <span>⌕</span>
+                <input id="searchInput" type="search"
+                    placeholder="Поиск по названию, описанию или городу...">
+            </div>
+
+            <select id="typeFilter">
+                <option value="all">Все объявления</option>
+                <option value="lost">Потерянные</option>
+                <option value="found">Найденные</option>
+            </select>
+
+            <select id="categoryFilter">
+                <option value="all">Все категории</option>
+                <option value="Электроника">Электроника</option>
+                <option value="Документы">Документы</option>
+                <option value="Одежда">Одежда</option>
+                <option value="Аксессуары">Аксессуары</option>
+                <option value="Животные">Животные</option>
+                <option value="Другое">Другое</option>
+            </select>
+        </div>
+
+        <div class="catalog-meta">
+            <span id="resultCount">0 объявлений</span>
+            <span>FindIt</span>
+        </div>
+
+        <div class="cards" id="cards"></div>
+
+        <div class="empty" id="emptyState">
+            <div>🔍</div>
+            <h3>Пока объявлений нет</h3>
+            <p>Будь первым! Опубликуй потерянную или найденную вещь.</p>
+            <button class="button primary" id="emptyAdd">
+                + Добавить объявление
+            </button>
+        </div>
+    </section>
+
+    <section class="about" id="about">
+        <div class="section-heading centered">
+            <div>
+                <span class="eyebrow">КАК ЭТО РАБОТАЕТ</span>
+                <h2>Всего три простых шага</h2>
+                <p>Вернуть потерянную вещь стало проще.</p>
+            </div>
+        </div>
+
+        <div class="steps">
+            <article>
+                <div class="step-icon">📝</div>
+                <span>01</span>
+                <h3>Создай объявление</h3>
+                <p>Добавь описание, фотографию и место.</p>
+            </article>
+
+            <article>
+                <div class="step-icon">🔎</div>
+                <span>02</span>
+                <h3>Найди нужное</h3>
+                <p>Используй поиск и категории.</p>
+            </article>
+
+            <article>
+                <div class="step-icon">🤝</div>
+                <span>03</span>
+                <h3>Свяжись с человеком</h3>
+                <p>Договорись о возвращении вещи.</p>
+            </article>
+        </div>
+    </section>
+
+    <section class="bottom-banner">
+        <div>
+            <span class="eyebrow">ПОМОГИ ДРУГИМ</span>
+            <h2>Нашёл чужую вещь?</h2>
+            <p>Опубликуй объявление. Возможно, её уже ищут.</p>
+        </div>
+        <button class="button white" id="bottomAdd">
+            Опубликовать →
+        </button>
+    </section>
+</main>
+
+<footer>
+    <a href="#" class="logo">Find<span>It.</span></a>
+    <p>© 2026 FindIt. Помогаем находить важное.</p>
+    <a href="#home">Наверх ↑</a>
+</footer>
+
+<!-- ОКНО ДОБАВЛЕНИЯ -->
+
+<div class="modal" id="modal">
+    <div class="modal-box">
+        <button class="close" id="closeModal">×</button>
+
+        <span class="eyebrow">НОВОЕ ОБЪЯВЛЕНИЕ</span>
+        <h2>Расскажи о вещи</h2>
+        <p class="modal-description">
+            Заполни информацию, чтобы другие могли помочь.
+        </p>
+
+        <form id="itemForm">
+            <label for="itemType">Тип объявления</label>
+            <select id="itemType" required>
+                <option value="lost">Я потерял вещь</option>
+                <option value="found">Я нашёл вещь</option>
+            </select>
+
+            <label for="itemName">Название вещи</label>
+            <input id="itemName" maxlength="60"
+                placeholder="Например, телефон" required>
+
+            <label for="itemCategory">Категория</label>
+            <select id="itemCategory" required>
+                <option value="Электроника">Электроника</option>
+                <option value="Документы">Документы</option>
+                <option value="Одежда">Одежда</option>
+                <option value="Аксессуары">Аксессуары</option>
+                <option value="Животные">Животные</option>
+                <option value="Другое">Другое</option>
+            </select>
+
+            <label for="itemLocation">Город и место</label>
+            <input id="itemLocation" maxlength="100"
+                placeholder="Например, Ташкент, Юнусабад" required>
+
+            <label for="itemDescription">Описание</label>
+            <textarea id="itemDescription" maxlength="500"
+                placeholder="Опиши вещь подробнее..." required></textarea>
+
+            <label for="itemContact">Телефон или Telegram</label>
+            <input id="itemContact" maxlength="100"
+                placeholder="+998901234567 или @username" required>
+
+            <label for="itemImage">Фотография (необязательно)</label>
+            <input id="itemImage" type="file"
+                accept="image/jpeg,image/png,image/webp">
+
+            <small>Максимальный размер фотографии — 5 МБ.</small>
+
+            <button type="submit" class="button primary submit">
+                Опубликовать объявление →
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+</body>
+</html>
