@@ -1,336 +1,175 @@
 
-const $ = id => document.getElementById(id);
-
-// Новая база без демонстрационных объявлений
 const STORAGE_KEY = "findit_clean_v1";
 
-let items = loadItems();
+let items = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
 
-function loadItems() {
-    try {
-        const data = localStorage.getItem(STORAGE_KEY);
-
-        if (!data) return [];
-
-        const parsed = JSON.parse(data);
-
-        return Array.isArray(parsed) ? parsed : [];
-    } catch (error) {
-        console.error(error);
-        return [];
-    }
-}
+const form = document.getElementById("listingForm");
+const list = document.getElementById("listings");
+const search = document.getElementById("searchInput");
+const category = document.getElementById("categoryFilter");
 
 function saveItems() {
-    try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-        return true;
-    } catch (error) {
-        console.error("Ошибка сохранения:", error);
-        return false;
-    }
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
 }
 
-// Защита текста от HTML-кода
-function escapeHTML(value) {
-    return String(value).replace(/[&<>"']/g, char => ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#039;"
-    })[char]);
+function escapeHTML(value = "") {
+  return String(value).replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;"
+  })[char]);
 }
 
-// Уведомления
-let toastTimer;
-
-function notify(message) {
-    const toast = $("toast");
-
-    toast.textContent = message;
-    toast.classList.add("show");
-
-    clearTimeout(toastTimer);
-
-    toastTimer = setTimeout(() => {
-        toast.classList.remove("show");
-    }, 3000);
-}
-
-// Открытие формы
-function openModal(type = "lost") {
-    $("itemType").value = type;
-    $("modal").classList.add("active");
-    document.body.style.overflow = "hidden";
-}
-
-function closeModal() {
-    $("modal").classList.remove("active");
-    document.body.style.overflow = "";
-}
-
-$("openAdd").addEventListener("click", () => openModal());
-$("heroFound").addEventListener("click", () => openModal("found"));
-$("catalogAdd").addEventListener("click", () => openModal());
-$("emptyAdd").addEventListener("click", () => openModal());
-$("bottomAdd").addEventListener("click", () => openModal("found"));
-$("closeModal").addEventListener("click", closeModal);
-
-$("modal").addEventListener("click", event => {
-    if (event.target === $("modal")) closeModal();
-});
-
-document.addEventListener("keydown", event => {
-    if (event.key === "Escape") closeModal();
-});
-
-// Проверка контактов
-function getContactLink(contact) {
-    const value = contact.trim();
-
-    if (/^@[a-zA-Z0-9_]{5,32}$/.test(value)) {
-        return "https://t.me/" + value.substring(1);
-    }
-
-    if (/^\+?[0-9\s()-]{7,20}$/.test(value)) {
-        return "tel:" + value.replace(/[^\d+]/g, "");
-    }
-
-    return null;
-}
-
-// Создание карточки
-function createCard(item) {
-    const card = document.createElement("article");
-    card.className = "item-card";
-
-    const lost = item.type === "lost";
-
-    const image = item.image
-        ? `<img src="${item.image}" alt="Фотография вещи">`
-        : "📦";
-
-    const contact = getContactLink(item.contact);
-
-    const contactButton = contact
-        ? `<a class="contact-btn"
-              href="${escapeHTML(contact)}"
-              target="_blank"
-              rel="noopener noreferrer">
-              Связаться с человеком →
-           </a>`
-        : `<span class="contact-btn">Контакт недоступен</span>`;
-
-    card.innerHTML = `
-        <div class="item-image">${image}</div>
-
-        <div class="item-info">
-            <div class="badges">
-                <span class="badge ${lost ? "badge-lost" : "badge-found"}">
-                    ${lost ? "ПОТЕРЯНО" : "НАЙДЕНО"}
-                </span>
-
-                <span class="badge badge-category">
-                    ${escapeHTML(item.category)}
-                </span>
-            </div>
-
-            <h3>${escapeHTML(item.name)}</h3>
-
-            <p>${escapeHTML(item.description)}</p>
-
-            <div class="item-location">
-                📍 ${escapeHTML(item.location)}
-            </div>
-
-            ${contactButton}
-        </div>
-    `;
-
-    return card;
-}
-
-// Отображение каталога
 function renderItems() {
-    const search = $("searchInput").value.trim().toLowerCase();
-    const type = $("typeFilter").value;
-    const category = $("categoryFilter").value;
+  if (!list) return;
 
-    const filtered = items.filter(item => {
-        const text = (
-            item.name + " " +
-            item.description + " " +
-            item.location
-        ).toLowerCase();
+  const query = (search?.value || "").toLowerCase();
+  const selectedCategory = category?.value || "all";
 
-        return (
-            text.includes(search) &&
-            (type === "all" || item.type === type) &&
-            (category === "all" || item.category === category)
-        );
-    });
+  const filtered = items.filter(item => {
+    const matchesSearch =
+      (item.title || "").toLowerCase().includes(query) ||
+      (item.description || "").toLowerCase().includes(query);
 
-    $("cards").replaceChildren();
+    const matchesCategory =
+      selectedCategory === "all" ||
+      item.category === selectedCategory;
 
-    filtered.forEach(item => {
-        $("cards").appendChild(createCard(item));
-    });
+    return matchesSearch && matchesCategory;
+  });
 
-    $("totalCount").textContent = items.length;
+  if (filtered.length === 0) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <h3>Объявлений пока нет</h3>
+        <p>Попробуйте изменить поиск или добавьте объявление.</p>
+      </div>
+    `;
+    return;
+  }
 
-    $("lostCount").textContent = items.filter(
-        item => item.type === "lost"
-    ).length;
+  list.innerHTML = filtered.map(item => `
+    <article class="listing-card">
+      ${item.image ? `
+        <img
+          class="listing-image"
+          src="${escapeHTML(item.image)}"
+          alt="${escapeHTML(item.title)}"
+        >
+      ` : ""}
 
-    $("foundCount").textContent = items.filter(
-        item => item.type === "found"
-    ).length;
+      <div class="listing-content">
+        <span class="listing-category">
+          ${escapeHTML(item.category || "Другое")}
+        </span>
 
-    $("resultCount").textContent =
-        `Найдено объявлений: ${filtered.length}`;
+        <h3>${escapeHTML(item.title)}</h3>
+        <p>${escapeHTML(item.description)}</p>
 
-    $("emptyState").hidden = filtered.length > 0;
+        <p class="listing-location">
+          📍 ${escapeHTML(item.location || "Не указано")}
+        </p>
+
+        <p>📞 ${escapeHTML(item.contact || "Не указан")}</p>
+
+        <small>${escapeHTML(item.date || "")}</small>
+
+        <button
+          class="delete-button"
+          data-delete-id="${escapeHTML(item.id)}"
+          type="button"
+        >
+          🗑️ Удалить объявление
+        </button>
+      </div>
+    </article>
+  `).join("");
 }
 
-// Поиск и фильтры
-$("searchInput").addEventListener("input", renderItems);
-$("typeFilter").addEventListener("change", renderItems);
-$("categoryFilter").addEventListener("change", renderItems);
+// Удаление объявления
+if (list) {
+  list.addEventListener("click", event => {
+    const button = event.target.closest("[data-delete-id]");
+    if (!button) return;
 
-// Сжатие фотографий
-function compressImage(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
+    const id = button.dataset.deleteId;
 
-        reader.onerror = () => reject(
-            new Error("Ошибка чтения файла")
-        );
+    const confirmed = confirm(
+      "Вы действительно хотите удалить это объявление?"
+    );
 
-        reader.onload = () => {
-            const image = new Image();
+    if (!confirmed) return;
 
-            image.onerror = () => reject(
-                new Error("Неверный формат изображения")
-            );
+    items = items.filter(item => String(item.id) !== String(id));
 
-            image.onload = () => {
-                const canvas = document.createElement("canvas");
-
-                let width = image.width;
-                let height = image.height;
-
-                const maxSize = 1000;
-
-                if (width > maxSize || height > maxSize) {
-                    const ratio = Math.min(
-                        maxSize / width,
-                        maxSize / height
-                    );
-
-                    width = Math.round(width * ratio);
-                    height = Math.round(height * ratio);
-                }
-
-                canvas.width = width;
-                canvas.height = height;
-
-                const context = canvas.getContext("2d");
-
-                context.drawImage(image, 0, 0, width, height);
-
-                resolve(canvas.toDataURL("image/jpeg", 0.7));
-            };
-
-            image.src = reader.result;
-        };
-
-        reader.readAsDataURL(file);
-    });
+    saveItems();
+    renderItems();
+  });
 }
 
-// Публикация объявления
-$("itemForm").addEventListener("submit", async event => {
+// Добавление объявления
+if (form) {
+  form.addEventListener("submit", event => {
     event.preventDefault();
 
-    const name = $("itemName").value.trim();
-    const location = $("itemLocation").value.trim();
-    const description = $("itemDescription").value.trim();
-    const contact = $("itemContact").value.trim();
-    const file = $("itemImage").files[0];
+    const title = form.querySelector('[name="title"]')?.value.trim();
+    const description = form.querySelector('[name="description"]')?.value.trim();
+    const categoryValue = form.querySelector('[name="category"]')?.value;
+    const location = form.querySelector('[name="location"]')?.value.trim();
+    const contact = form.querySelector('[name="contact"]')?.value.trim();
+    const imageInput = form.querySelector('[name="image"]');
 
-    if (!name || !location || !description || !contact) {
-        notify("Заполни все обязательные поля.");
-        return;
+    if (!title || !description) {
+      alert("Заполните название и описание.");
+      return;
     }
 
-    if (!getContactLink(contact)) {
-        notify("Проверь номер телефона или Telegram.");
-        return;
-    }
+    const file = imageInput?.files?.[0];
+
+    const addItem = image => {
+      const newItem = {
+        id: Date.now().toString(),
+        title,
+        description,
+        category: categoryValue || "Другое",
+        location: location || "",
+        contact: contact || "",
+        image: image || "",
+        date: new Date().toLocaleDateString("ru-RU")
+      };
+
+      items.unshift(newItem);
+      saveItems();
+      form.reset();
+      renderItems();
+      alert("Объявление добавлено!");
+    };
 
     if (file) {
-        if (!file.type.startsWith("image/")) {
-            notify("Выбери изображение.");
-            return;
-        }
+      if (!file.type.startsWith("image/")) {
+        alert("Выберите изображение.");
+        return;
+      }
 
-        if (file.size > 5 * 1024 * 1024) {
-            notify("Фотография должна быть меньше 5 МБ.");
-            return;
-        }
+      if (file.size > 2 * 1024 * 1024) {
+        alert("Фото должно быть меньше 2 МБ.");
+        return;
+      }
+
+      const reader = new FileReader();
+
+      reader.onload = () => addItem(reader.result);
+      reader.onerror = () => alert("Не удалось загрузить фото.");
+      reader.readAsDataURL(file);
+    } else {
+      addItem("");
     }
+  });
+}
 
-    const button = $("itemForm").querySelector(".submit");
+search?.addEventListener("input", renderItems);
+category?.addEventListener("change", renderItems);
 
-    button.disabled = true;
-    button.textContent = "Публикуем...";
-
-    try {
-        let image = "";
-
-        if (file) {
-            image = await compressImage(file);
-        }
-
-        const newItem = {
-            id: Date.now(),
-            type: $("itemType").value,
-            name,
-            category: $("itemCategory").value,
-            location,
-            description,
-            contact,
-            image
-        };
-
-        items.unshift(newItem);
-
-        if (!saveItems()) {
-            items.shift();
-            notify("Не удалось сохранить объявление. Возможно, закончилось место.");
-            return;
-        }
-
-        $("itemForm").reset();
-
-        closeModal();
-        renderItems();
-
-        $("catalog").scrollIntoView({
-            behavior: "smooth"
-        });
-
-        notify("Объявление успешно опубликовано!");
-
-    } catch (error) {
-        console.error(error);
-        notify("Ошибка обработки фотографии.");
-    } finally {
-        button.disabled = false;
-        button.textContent = "Опубликовать объявление →";
-    }
-});
-
-// Запуск сайта
 renderItems();
